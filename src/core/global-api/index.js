@@ -50,6 +50,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
     observe(obj)
     return obj
   }
+  // no use，阻止上面的泛型影响下面的语言检测 </T>
 
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
@@ -62,8 +63,8 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   extend(Vue.options.components, builtInComponents)
 
-  initUse(Vue)
-  initMixin(Vue)
-  initExtend(Vue)
-  initAssetRegisters(Vue)
+  initUse(Vue) // Vue.use
+  initMixin(Vue) // Vue.mixin
+  initExtend(Vue) // Vue.extend
+  initAssetRegisters(Vue) // component', 'directive', 'filter'
 }

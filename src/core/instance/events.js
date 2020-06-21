@@ -14,6 +14,7 @@ export function initEvents (vm: Component) {
   vm._hasHookEvent = false
   // init parent attached events
   const listeners = vm.$options._parentListeners
+  // 初始化
   if (listeners) {
     updateComponentListeners(vm, listeners)
   }
@@ -29,22 +30,35 @@ function remove (event, fn) {
   target.$off(event, fn)
 }
 
+/**
+ * 创建事件调用函数，只会被触发一次
+ * @param {*} event 
+ * @param {*} fn 
+ */
 function createOnceHandler (event, fn) {
   const _target = target
   return function onceHandler () {
     const res = fn.apply(null, arguments)
     if (res !== null) {
+      // 被调用一次后从注册队列中删除自身
       _target.$off(event, onceHandler)
     }
   }
 }
 
+/**
+ * 更新组件事件
+ * @param {*} vm 
+ * @param {*} listeners 新的事件
+ * @param {*} oldListeners 旧事件
+ */
 export function updateComponentListeners (
   vm: Component,
   listeners: Object,
   oldListeners: ?Object
 ) {
   target = vm
+  // 更新数据源，去除旧值
   updateListeners(listeners, oldListeners || {}, add, remove, createOnceHandler, vm)
   target = undefined
 }

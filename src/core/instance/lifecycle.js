@@ -33,6 +33,7 @@ export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+  // 定位第一个非抽象父节点
   let parent = options.parent
   if (parent && !options.abstract) {
     while (parent.$options.abstract && parent.$parent) {
@@ -138,13 +139,21 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * 挂载组件
+ * @param {*} vm 
+ * @param {*} el 
+ * @param {*} hydrating 
+ */
 export function mountComponent (
   vm: Component,
   el: ?Element,
   hydrating?: boolean
 ): Component {
   vm.$el = el
+  // options 没有 render 函数
   if (!vm.$options.render) {
+    // 创建一个空 VNode
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
       /* istanbul ignore if */
@@ -169,6 +178,7 @@ export function mountComponent (
   let updateComponent
   /* istanbul ignore if */
   if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
+    // 非生产环境 性能分析
     updateComponent = () => {
       const name = vm._name
       const id = vm._uid
@@ -176,6 +186,7 @@ export function mountComponent (
       const endTag = `vue-perf-end:${id}`
 
       mark(startTag)
+      // Vue.prototype._render in (/src/core/instance/render.js)
       const vnode = vm._render()
       mark(endTag)
       measure(`vue ${name} render`, startTag, endTag)
@@ -186,6 +197,7 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+    // patch 触发 render
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }
@@ -194,9 +206,13 @@ export function mountComponent (
   // we set this to vm._watcher inside the watcher's constructor
   // since the watcher's initial patch may call $forceUpdate (e.g. inside child
   // component's mounted hook), which relies on vm._watcher being already defined
+  // Watcher 在这里起到两个作用，一个是初始化的时候会执行回调函数
+  // 另一个是当 vm 实例中的监测的数据发生变化的时候执行回调函数
+  
   new Watcher(vm, updateComponent, noop, {
     before () {
       if (vm._isMounted && !vm._isDestroyed) {
+        // 触发 beforeUpdate 生命周期函数
         callHook(vm, 'beforeUpdate')
       }
     }
@@ -206,7 +222,9 @@ export function mountComponent (
   // manually mounted instance, call mounted on self
   // mounted is called for render-created child components in its inserted hook
   if (vm.$vnode == null) {
+    // vm.$vnode 表示 Vue 实例的父虚拟 Node，所以它为 Null 则表示当前是根 Vue 的实例
     vm._isMounted = true
+    // 触发 mounted 生命周期函数
     callHook(vm, 'mounted')
   }
   return vm

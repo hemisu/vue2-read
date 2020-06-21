@@ -9,11 +9,19 @@
   <body>
     <div id="app">
       <p>{{ message }}</p>
+      <component1 />
     </div>
  
     <script>
       Vue.config.performance = true
-      new Vue({
+      const component1 = {
+        name: 'component1',
+        render(h) {
+          return h('div', 'component1 content')
+        }
+      }
+      Vue.component('component1', component1)
+      const a = new Vue({
         el: '#app',
         data: {
           message: 'hello vue.js'

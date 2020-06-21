@@ -35,6 +35,7 @@ export function initMixin (Vue: Class<Component>) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
+      // 内部组件的 options 相对固定，直接赋值即可。不需要执行 mergeOptions 这种耗性能的方法合并配置
       initInternalComponent(vm, options)
     } else {
       vm.$options = mergeOptions(
@@ -53,7 +54,7 @@ export function initMixin (Vue: Class<Component>) {
     vm._self = vm
     initLifecycle(vm)
     initEvents(vm)
-    initRender(vm)
+    initRender(vm) // _render() 渲染函数相关
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
     initState(vm)
@@ -73,6 +74,11 @@ export function initMixin (Vue: Class<Component>) {
   }
 }
 
+/**
+ * 初始化内部组件
+ * @param vm vue实例
+ * @param options 参数
+ */
 export function initInternalComponent (vm: Component, options: InternalComponentOptions) {
   const opts = vm.$options = Object.create(vm.constructor.options)
   // doing this because it's faster than dynamic enumeration.
@@ -87,6 +93,7 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   opts._componentTag = vnodeComponentOptions.tag
 
   if (options.render) {
+    // 渲染函数
     opts.render = options.render
     opts.staticRenderFns = options.staticRenderFns
   }
@@ -94,9 +101,13 @@ export function initInternalComponent (vm: Component, options: InternalComponent
 
 export function resolveConstructorOptions (Ctor: Class<Component>) {
   let options = Ctor.options
+  // 存在父类
   if (Ctor.super) {
+    // 递归继续找是否有父类，返回父类的 options
     const superOptions = resolveConstructorOptions(Ctor.super)
+    // 当前缓存的父类 options
     const cachedSuperOptions = Ctor.superOptions
+    // 发现父类 options 变更
     if (superOptions !== cachedSuperOptions) {
       // super option changed,
       // need to resolve new options.
@@ -109,6 +120,7 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
       }
       options = Ctor.options = mergeOptions(superOptions, Ctor.extendOptions)
       if (options.name) {
+        // 如果参数含有name 组件name
         options.components[options.name] = Ctor
       }
     }
@@ -116,6 +128,7 @@ export function resolveConstructorOptions (Ctor: Class<Component>) {
   return options
 }
 
+/** 子类 options 更新  */
 function resolveModifiedOptions (Ctor: Class<Component>): ?Object {
   let modified
   const latest = Ctor.options
