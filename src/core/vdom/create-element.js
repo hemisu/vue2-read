@@ -33,11 +33,15 @@ export function createElement (
   normalizationType: any,
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
+  // 这里有些函数重载的意思
+  // 如果createElement的第三个参数是 数组 或者 基本类型（ES6中加入了Symbol)
+  // 则认为data为空，传入的参数作为 children
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
     children = data
     data = undefined
   }
+  // 用户手动调用 render
   if (isTrue(alwaysNormalize)) {
     normalizationType = ALWAYS_NORMALIZE
   }
@@ -51,6 +55,8 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+  // 这里检测 data.__ob__ 检测是否为 Observer 观察的数据
+  // 避免 data 在 VNode 创建过程中被修改导致一系列变更
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
@@ -68,6 +74,7 @@ export function _createElement (
     return createEmptyVNode()
   }
   // warn against non-primitive key
+  // 非基本类型的 key 无法通过 === 对比，此处在非生产环境报警
   if (process.env.NODE_ENV !== 'production' &&
     isDef(data) && isDef(data.key) && !isPrimitive(data.key)
   ) {
@@ -87,17 +94,27 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  // 主要方法入口
   if (normalizationType === ALWAYS_NORMALIZE) {
+    // 调用场景：
+    // 1. 用户手写的
+    // 2. e.g. <template>, <slot>, v-for
+    // 需要深度遍历并规范化 =》 转换为 VNode
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {
+    // 调用场景：
+    // 1. render 函数是通过编译生成的，确保它的子节点都是 VNode，不需要深度遍历
+    // 2. 会在 functional Component出现，depth = 1 的 Children Array，直接 flat 后返回即可；
     children = simpleNormalizeChildren(children)
   }
+  // 完成 children 的规范化，开始创建 VNode
   let vnode, ns
   if (typeof tag === 'string') {
     let Ctor
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
     if (config.isReservedTag(tag)) {
       // platform built-in elements
+      // 检测是否在自定义 evnet 使用了 .native 修饰符
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
         warn(
           `The .native modifier for v-on is only valid on components but it was used on <${tag}>.`,
@@ -110,6 +127,9 @@ export function _createElement (
       )
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
+      // 如果存在 options.components 则
+      // 分别用 tag, camelizedId(tag) a-bbb-ccc => aBbbCcc, PascalCaseId(tag) abc => Abc
+      // 去寻找 components 中的声明
       vnode = createComponent(Ctor, data, context, children, tag)
     } else {
       // unknown or unlisted namespaced elements
