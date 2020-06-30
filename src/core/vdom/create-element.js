@@ -142,6 +142,7 @@ export function _createElement (
     }
   } else {
     // direct component options / constructor
+    // tag 传入的是一个 component 或者 构造函数
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {

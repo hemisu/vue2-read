@@ -123,14 +123,18 @@ export function resolveAsyncComponent (
         res.component.then(resolve, reject)
 
         if (isDef(res.error)) {
+          // 加载失败时使用的组件
           factory.errorComp = ensureCtor(res.error, baseCtor)
         }
 
         if (isDef(res.loading)) {
+          // 异步组件加载时使用的组件
           factory.loadingComp = ensureCtor(res.loading, baseCtor)
           if (res.delay === 0) {
+            // 延时时间是0 直接显示loading组件
             factory.loading = true
           } else {
+            // 展示加载时组件的延时时间。默认值是 200 (毫秒)
             timerLoading = setTimeout(() => {
               timerLoading = null
               if (isUndef(factory.resolved) && isUndef(factory.error)) {
@@ -141,6 +145,8 @@ export function resolveAsyncComponent (
           }
         }
 
+        // 如果提供了超时时间且组件加载也超时了，
+        // 则使用加载失败时使用的组件。默认值是：`Infinity`
         if (isDef(res.timeout)) {
           timerTimeout = setTimeout(() => {
             timerTimeout = null
